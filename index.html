@@ -126,7 +126,6 @@ tr.sel td{font-weight:600}
     <div class="splitbar"><span id="barD" style="background:var(--daily);width:0"></span><span id="barF" style="background:var(--fixed);width:0"></span></div>
   </section>
 
-  <div class="demo" id="demo" hidden>Você está vendo <strong>dados de exemplo</strong>. Assim que cadastrar o primeiro gasto ou despesa fixa, eles somem e só os seus valores aparecem.</div>
 
   <nav class="tabs" aria-label="Abas">
     <a href="#dia">Dia a dia</a>
@@ -228,19 +227,7 @@ function monthName(m,short){const [y,mo]=m.split("-").map(Number);const s=new Da
 function parseVal(s){s=String(s).trim().replace(/R\$\s?/,"");if(s.includes(","))s=s.replace(/\./g,"").replace(",",".");const v=Number(s);return isFinite(v)&&v>0?Math.round(v*100)/100:null}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 
-/* ---------- dados de exemplo (só exibição, nunca salvos) ---------- */
-function demoData(){
-  let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
-  const fx=[["Aluguel","Moradia",1200,5],["Internet","Contas",99.9,10],["Energia (média)","Contas",180,15],["Academia","Lazer",89.9,8],["Curso preparatório","Educação",149,12]]
-    .map(([nome,categoria,valor,dia],i)=>({id:"x"+i,nome,categoria,valor,dia,inicio:shiftMonth(thisMonth,-11),fim:null}));
-  const items=[["Almoço","Alimentação",18,40],["Mercado","Mercado",80,260],["Gasolina","Transporte",60,150],["Uber","Transporte",12,35],["Farmácia","Saúde",15,90],["Lanche","Alimentação",8,25],["Cinema","Lazer",30,60],["Livro","Educação",40,90],["Roupa","Compras",60,220]];
-  const d=[];
-  for(let k=11;k>=0;k--){const m=shiftMonth(thisMonth,-k);const days=k===0?now.getDate():28;const n=14+Math.floor(rnd()*10);
-    for(let i=0;i<n;i++){const it=items[Math.floor(rnd()*items.length)];d.push({id:`d${k}_${i}`,data:`${m}-${pad(1+Math.floor(rnd()*days))}`,descricao:it[0],categoria:it[1],valor:Math.round((it[2]+rnd()*(it[3]-it[2]))*100)/100})}}
-  return {daily:d,fixed:fx};
-}
-let DEMO=null;
-function view(){if(!daily.length&&!fixed.length){DEMO=DEMO||demoData();return {daily:DEMO.daily,fixed:DEMO.fixed,demo:true}}return {daily,fixed,demo:false}}
+function view(){return {daily,fixed,demo:false}}
 
 /* ---------- cálculo ---------- */
 const fixedIn=(f,m)=>f.inicio<=m&&(!f.fim||m<=f.fim);
@@ -249,7 +236,6 @@ function totals(v,m){const d=v.daily.filter(e=>e.data.startsWith(m)).reduce((s,e
 /* ---------- renderização ---------- */
 function render(){
   const v=view();
-  $("demo").hidden=!v.demo;
   $("monthLabel").textContent=monthName(month);
   $("next").disabled=false;
   const t=totals(v,month),p=totals(v,shiftMonth(month,-1));
