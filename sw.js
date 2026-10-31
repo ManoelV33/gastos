@@ -1,4 +1,4 @@
-const CACHE = "gastos-v5";
+const CACHE = "gastos-v6";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-180-v2.png", "./icon-192-v2.png", "./icon-512-v2.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener("activate", e => {

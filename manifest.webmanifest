@@ -1,6 +1,6 @@
 {
-  "name": "Gastos",
-  "short_name": "Gastos",
+  "name": "Caderneta de Gastos",
+  "short_name": "Caderneta de Gastos",
   "description": "Controle pessoal de gastos: dia a dia, despesas fixas, comparativo mensal e onde mais gastei.",
   "lang": "pt-BR",
   "start_url": "./",
