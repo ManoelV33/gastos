@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Caderneta de Gastos</title>
+<title>Gastos</title>
 <meta name="theme-color" content="#15222A">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Caderneta de Gastos">
+<meta name="apple-mobile-web-app-title" content="Gastos">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon-192-v2.png">
-<link rel="apple-touch-icon" href="icon-180-v2.png">
+<link rel="icon" href="icon-192-v3.png">
+<link rel="apple-touch-icon" href="icon-180-v3.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -105,7 +105,7 @@ tr.sel td{font-weight:600}
 <div class="wrap">
   <div class="top">
     <div>
-      <h1>Caderneta de Gastos</h1>
+      <h1>Gastos</h1>
       <div class="status" id="status"><i></i><span>Carregando…</span></div>
     </div>
     <div class="month">
@@ -333,7 +333,7 @@ function bkInfo(){$("bkInfo").textContent=`Neste aparelho: ${daily.length} gasto
 function bkMsg(t){$("bkMsg").textContent=t;$("bkMsg").hidden=!t}
 $("bkExport").onclick=async()=>{
   const payload=JSON.stringify({app:"Gastos",versao:1,exportadoEm:new Date().toISOString(),gastos:daily,fixas:fixed},null,1);
-  const name=`caderneta-gastos-backup-${todayISO}.json`;
+  const name=`gastos-backup-${todayISO}.json`;
   const file=new File([payload],name,{type:"application/json"});
   try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});bkMsg("Backup gerado: "+name);return}}catch(e){if(e.name==="AbortError")return}
   const a=document.createElement("a");a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);
@@ -344,7 +344,7 @@ $("bkFile").onchange=e=>{
   const f=e.target.files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.gastos)||!Array.isArray(d.fixas))throw 0;
       pending=d;$("bkConfirmText").textContent=`O arquivo tem ${d.gastos.length} gasto(s) e ${d.fixas.length} despesa(s) fixa(s)${d.exportadoEm?`, exportado em ${new Date(d.exportadoEm).toLocaleDateString("pt-BR")}`:""}. Os ${daily.length} gasto(s) e ${fixed.length} fixa(s) que estão agora neste aparelho serão apagados.`;$("bkConfirm").hidden=false;bkMsg("")}
-    catch(err){bkMsg("Este arquivo não é um backup da Caderneta de Gastos. Escolha o arquivo .json que você exportou.")}
+    catch(err){bkMsg("Este arquivo não é um backup do Gastos. Escolha o arquivo .json que você exportou.")}
     e.target.value=""};
   r.readAsText(f)};
 $("bkYes").onclick=()=>{if(!pending)return;daily=pending.gastos.filter(x=>x&&x.data&&typeof x.valor==="number");fixed=pending.fixas.filter(x=>x&&x.inicio&&typeof x.valor==="number");
