@@ -129,6 +129,20 @@ p.note{margin:0;color:var(--muted);font-size:14px}
 .keys{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .keys button{height:46px;border:0;border-radius:12px;background:var(--surf2);font-size:23px;font-weight:600;display:flex;align-items:center;justify-content:center}
 .keys button:active{background:#0F2E66}
+.sheet.fixmode{gap:8px}
+.sheet.fixmode .amount{gap:4px;padding:0}
+.sheet.fixmode .amount .val{font-size:34px}
+.sheet.fixmode .amount input{padding:7px 12px}
+.sheet.fixmode .fixrow{gap:6px 10px;padding:10px 12px}
+.sheet.fixmode .fixrow .note{font-size:12.5px}
+.sheet.fixmode .fixrow input{padding:6px 10px}
+.sheet.fixmode .segc button{height:34px}
+.sheet.fixmode .cats{gap:5px}
+.sheet.fixmode .cats button{height:46px;gap:1px}
+.sheet.fixmode .cats svg{width:18px;height:18px}
+.sheet.fixmode .keys{gap:6px}
+.sheet.fixmode .keys button{height:40px;font-size:21px}
+#sSave{position:sticky;bottom:calc(env(safe-area-inset-bottom,0px)*0);z-index:2;flex:none;box-shadow:0 -14px 14px var(--surf),0 14px 0 var(--surf)}
 .err{margin:0;color:var(--up);font-size:13px;text-align:center}
 .editrow{display:flex;gap:8px;flex-wrap:wrap}
 .editrow .btn{flex:1;height:46px;font-size:14px}
@@ -206,7 +220,7 @@ p.note{margin:0;color:var(--muted);font-size:14px}
     <div class="cats" id="sCats" role="radiogroup" aria-label="Categoria"></div>
     <div class="keys" id="sKeys"></div>
     <p class="err" id="sErr" hidden></p>
-    <button class="btn" id="sSave" type="button">Salvar gasto</button>
+    <button class="btn" id="sSave" type="button">Incluir</button>
     <div class="editrow" id="sEdit" hidden>
       <button class="btn ghost" id="sEnd" type="button">Encerrar neste mês</button>
       <button class="btn danger" id="sDel" type="button">Excluir</button>
@@ -390,10 +404,10 @@ function setCat(n){S.cat=n;document.querySelectorAll("#sCats button").forEach(b=
 function setTipo(t){
   S.tipo=t;
   document.querySelectorAll("#sSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tipo===t));
-  $("sFix").hidden=t!=="fixo";$("sDate").hidden=t==="fixo";
+  $("sFix").hidden=t!=="fixo";document.querySelector("#sheet .sheet").classList.toggle("fixmode",t==="fixo");$("sDate").hidden=t==="fixo";
   const e=!!S.edit;
   $("sTitle").textContent=t==="fixo"?(e?"Editar despesa fixa":"Nova despesa fixa"):(e?"Editar gasto":"Novo gasto");
-  $("sSave").textContent=t==="fixo"?"Salvar despesa fixa":"Salvar gasto";
+  $("sSave").textContent=e?"Salvar alterações":"Incluir";
   $("sEnd").hidden=!(e&&t==="fixo");
 }
 function setDur(d){S.dur=d;document.querySelectorAll("#sDur button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.dur===d));document.querySelectorAll(".parcf").forEach(l=>l.hidden=d!=="parc");$("sIni").parentElement.firstChild.textContent=d==="parc"?"Primeira parcela":"A partir de";fixNote()}
