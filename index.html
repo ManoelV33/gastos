@@ -193,9 +193,15 @@ p.note{margin:0;color:var(--muted);font-size:14px}
       <input id="sDesc" placeholder="Descrição (opcional)" maxlength="60" aria-label="Descrição" autocomplete="off">
     </div>
     <div class="fixrow" id="sFix" hidden>
-      <div class="note"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg><span>Entra automaticamente em todos os meses a partir do mês de início.</span></div>
+      <div class="note"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg><span id="sFixNote">Entra automaticamente em todos os meses a partir do mês de início.</span></div>
+      <div class="segc" id="sDur" role="group" aria-label="Duração" style="grid-column:1/-1">
+        <button type="button" data-dur="mensal" aria-pressed="true">Todo mês</button>
+        <button type="button" data-dur="parc" aria-pressed="false">Parcelado</button>
+      </div>
       <label for="sDia">Vence dia<input id="sDia" type="number" inputmode="numeric" min="1" max="31" placeholder="10"></label>
-      <label for="sIni">A partir de<input id="sIni" type="month"></label>
+      <label for="sIni">Primeira parcela<input id="sIni" type="month"></label>
+      <label for="sParc" class="parcf" hidden>Nº de parcelas<input id="sParc" type="number" inputmode="numeric" min="1" max="360" placeholder="10"></label>
+      <label for="sFim" class="parcf" hidden>Última parcela<input id="sFim" type="month"></label>
     </div>
     <div class="cats" id="sCats" role="radiogroup" aria-label="Categoria"></div>
     <div class="keys" id="sKeys"></div>
@@ -245,6 +251,8 @@ let daily=load("cg_daily").filter(e=>e&&e.data&&typeof e.valor==="number");
 let fixed=load("cg_fixed").filter(e=>e&&e.inicio&&typeof e.valor==="number");
 function save(){try{localStorage.setItem("cg_daily",JSON.stringify(daily));localStorage.setItem("cg_fixed",JSON.stringify(fixed));return true}catch(e){toast("Não foi possível salvar neste aparelho");return false}}
 const fixedIn=(f,m)=>f.inicio<=m&&(!f.fim||m<=f.fim);
+const monthsBetween=(a,b)=>{const [ya,ma]=a.split("-").map(Number),[yb,mb]=b.split("-").map(Number);return (yb-ya)*12+(mb-ma)};
+const mLabel=m=>`${monthName(m,true)}/${m.slice(2,4)}`;
 function totals(m){const d=daily.filter(e=>e.data.startsWith(m)).reduce((s,e)=>s+e.valor,0);const f=fixed.filter(x=>fixedIn(x,m)).reduce((s,x)=>s+x.valor,0);return {d,f,t:d+f}}
 function byCat(m){const r={};daily.filter(e=>e.data.startsWith(m)).forEach(e=>r[e.categoria]=(r[e.categoria]||0)+e.valor);fixed.filter(f=>fixedIn(f,m)).forEach(f=>r[f.categoria]=(r[f.categoria]||0)+f.valor);return Object.entries(r).map(([n,v])=>({n,v})).sort((a,b)=>b.v-a.v)}
 function bigMoney(v){const s=fmt(v);const i=s.lastIndexOf(",");return i<0?esc(s):`${esc(s.slice(0,i))}<small>${esc(s.slice(i))}</small>`}
@@ -290,11 +298,19 @@ function renderFixas(){
   const act=list.filter(f=>fixedIn(f,month));
   const sum=act.reduce((s,f)=>s+f.valor,0);
   let rows=list.map(f=>{const on=fixedIn(f,month);
-    const sub=[f.categoria,f.dia?`vence dia ${f.dia}`:"",`desde ${monthName(f.inicio,true)}/${f.inicio.slice(2,4)}`,f.fim?`até ${monthName(f.fim,true)}/${f.fim.slice(2,4)}`:""].filter(Boolean).join(" · ");
-    return `<button class="item" type="button" data-edit-fixed="${esc(f.id)}">${catIcon(f.categoria)}<span class="t"><b>${esc(f.nome)}<span class="pill ${on?"":"off"}">${on?"ativa":"fora do mês"}</span></b><span>${esc(sub)}</span></span><span class="v">${fmt(f.valor)}</span></button>`}).join("");
+    let pill,sub;
+    if(f.parcelas){
+      const k=monthsBetween(f.inicio,month)+1,quit=f.fim&&month>f.fim;
+      pill=on?`<span class="pill">parcela ${k}/${f.parcelas}</span>`:quit?`<span class="pill off">quitada</span>`:`<span class="pill off">começa ${mLabel(f.inicio)}</span>`;
+      sub=[f.categoria,f.dia?`vence dia ${f.dia}`:"",`${f.parcelas}x · ${mLabel(f.inicio)} → ${mLabel(f.fim)}`].filter(Boolean).join(" · ");
+    }else{
+      pill=`<span class="pill ${on?"":"off"}">${on?"ativa":"fora do mês"}</span>`;
+      sub=[f.categoria,f.dia?`vence dia ${f.dia}`:"",`desde ${mLabel(f.inicio)}`,f.fim?`até ${mLabel(f.fim)}`:""].filter(Boolean).join(" · ");
+    }
+    return `<button class="item" type="button" data-edit-fixed="${esc(f.id)}">${catIcon(f.categoria)}<span class="t"><b>${esc(f.nome)}${pill}</b><span>${esc(sub)}</span></span><span class="v">${fmt(f.valor)}</span></button>`}).join("");
   $("v-fixas").innerHTML=`
-  <div class="total"><span class="label">Fixas em ${monthName(month)}</span><span class="big">${bigMoney(sum)}</span><div class="chiprow"><span>${act.length} despesa(s) valendo neste mês</span></div></div>
-  <div>${rows||`<div class="empty"><span>Nenhuma despesa fixa ainda. Cadastre aluguel, internet, academia… Elas entram sozinhas em todo mês.</span><button class="btn small" type="button" data-open="fixo">Cadastrar despesa fixa</button></div>`}</div>
+  <div class="total"><span class="label">Fixas em ${monthName(month)}</span><span class="big">${bigMoney(sum)}</span><div class="chiprow"><span>${act.length} despesa(s) valendo neste mês${act.filter(f=>f.parcelas).length?` · ${act.filter(f=>f.parcelas).length} parcelada(s)`:""}</span></div></div>
+  <div>${rows||`<div class="empty"><span>Nenhuma despesa fixa ainda. Cadastre aluguel, internet, academia ou compras parceladas. Elas entram sozinhas nos meses certos.</span><button class="btn small" type="button" data-open="fixo">Cadastrar despesa fixa</button></div>`}</div>
   ${rows?`<button class="btn ghost" type="button" data-open="fixo">Nova despesa fixa</button>`:""}`;
 }
 function renderComparativo(){
@@ -326,7 +342,7 @@ function renderComparativo(){
 function renderRanking(){
   const cats=byCat(month),T=cats.reduce((s,c)=>s+c.v,0),max=cats[0]?.v||1;
   const items=[...daily.filter(e=>e.data.startsWith(month)).map(e=>({n:e.descricao,c:e.categoria,v:e.valor,s:e.data.slice(8)+"/"+e.data.slice(5,7)})),
-    ...fixed.filter(f=>fixedIn(f,month)).map(f=>({n:f.nome,c:f.categoria,v:f.valor,s:"fixa"}))].sort((a,b)=>b.v-a.v).slice(0,10);
+    ...fixed.filter(f=>fixedIn(f,month)).map(f=>({n:f.nome,c:f.categoria,v:f.valor,s:f.parcelas?`parcela ${monthsBetween(f.inicio,month)+1}/${f.parcelas}`:"fixa"}))].sort((a,b)=>b.v-a.v).slice(0,10);
   $("v-ranking").innerHTML=cats.length?`
   <div class="card"><div class="cardhead"><span>Por categoria</span><span>${fmt(T)}</span></div>
    ${cats.map(c=>{const k=catOf(c.n);return `<div class="rank">${catIcon(c.n)}<div class="n">${esc(c.n)}<div class="bar"><i style="width:${c.v/max*100}%;background:${k.c}"></i></div></div><div class="r">${fmt(c.v)}<span>${pct(c.v,T)}</span></div></div>`}).join("")}</div>
@@ -368,7 +384,7 @@ function key(k){
   if(k==="back")S.buf=S.buf.slice(0,-1);
   else if(k===","){if(!S.buf.includes(","))S.buf=(S.buf||"0")+","}
   else{const [i,d]=S.buf.split(",");if(d!==undefined){if(d.length<2)S.buf+=k}else if((i||"").length<8){S.buf=(i==="0"?"":S.buf)+k}}
-  showVal();err("");
+  showVal();err("");if(S.dur==="parc")fixNote();
 }
 function setCat(n){S.cat=n;document.querySelectorAll("#sCats button").forEach(b=>{const on=b.dataset.cat===n;const c=catOf(b.dataset.cat).c;b.setAttribute("aria-checked",on);b.style.borderColor=on?c:"transparent";b.style.background=on?hexA(c,.16):""})}
 function setTipo(t){
@@ -380,6 +396,14 @@ function setTipo(t){
   $("sSave").textContent=t==="fixo"?"Salvar despesa fixa":"Salvar gasto";
   $("sEnd").hidden=!(e&&t==="fixo");
 }
+function setDur(d){S.dur=d;document.querySelectorAll("#sDur button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.dur===d));document.querySelectorAll(".parcf").forEach(l=>l.hidden=d!=="parc");$("sIni").parentElement.firstChild.textContent=d==="parc"?"Primeira parcela":"A partir de";fixNote()}
+function fixNote(){
+  if(S.dur!=="parc"){$("sFixNote").textContent="Entra automaticamente em todos os meses a partir do mês de início.";return}
+  const n=parseInt($("sParc").value)||0,ini=$("sIni").value,fim=$("sFim").value,v=bufVal();
+  $("sFixNote").textContent=n>0&&ini&&fim?`Entra de ${mLabel(ini)} até ${mLabel(fim)} · ${n} parcela(s)${v>0?` · total ${fmt(v*n)}`:""}.`:"Informe o número de parcelas ou a última parcela.";
+}
+function syncFromN(){const n=parseInt($("sParc").value)||0,ini=$("sIni").value;if(n>0&&ini)$("sFim").value=shiftMonth(ini,n-1);fixNote()}
+function syncFromFim(){const ini=$("sIni").value,fim=$("sFim").value;if(ini&&fim){const n=monthsBetween(ini,fim)+1;$("sParc").value=n>0?n:""}fixNote()}
 function err(m){$("sErr").textContent=m;$("sErr").hidden=!m}
 function openSheet(tipo,edit){
   S.edit=edit||null;S.delArm=false;$("sDel").textContent="Excluir";
@@ -391,10 +415,11 @@ function openSheet(tipo,edit){
     setCat(edit.categoria);
     $("sDate").value=edit.data||defDate;
     $("sDia").value=edit.dia||"";$("sIni").value=edit.inicio||month;
-    $("sEnd").textContent=edit.fim?"Reativar":"Encerrar neste mês";
+    $("sParc").value=edit.parcelas||"";$("sFim").value=edit.parcelas?edit.fim:"";setDur(edit.parcelas?"parc":"mensal");
+    $("sEnd").textContent=edit.parcelas?(edit.fim&&monthsBetween(edit.inicio,edit.fim)+1<edit.parcelas?"Reativar parcelas":"Quitar neste mês"):(edit.fim?"Reativar":"Encerrar neste mês");
   }else{
     S.buf="";$("sDesc").value="";setCat(tipo==="fixo"?"Moradia":"Alimentação");
-    $("sDate").value=defDate;$("sDia").value="";$("sIni").value=month;
+    $("sDate").value=defDate;$("sDia").value="";$("sIni").value=month;$("sParc").value="";$("sFim").value="";setDur("mensal");
   }
   setTipo(tipo);showVal();err("");
   $("sheet").hidden=false;document.body.style.overflow="hidden";
@@ -414,8 +439,11 @@ function saveSheet(){
   }else{
     const dia=Math.min(31,Math.max(1,parseInt($("sDia").value)||0))||null;
     const inicio=$("sIni").value||month;
-    if(S.edit){Object.assign(fixed.find(f=>f.id===S.edit.id)||{}, {nome:desc,categoria:S.cat,valor:v,dia,inicio})}
-    else fixed.push({id:uid(),nome:desc,categoria:S.cat,valor:v,dia,inicio,fim:null});
+    let parcelas=null,fim=S.edit?S.edit.fim:null;
+    if(S.dur==="parc"){parcelas=parseInt($("sParc").value)||0;if(!(parcelas>=1&&parcelas<=360))return err("Informe o número de parcelas (ou a última parcela).");fim=shiftMonth(inicio,parcelas-1)}
+    else if(S.edit&&S.edit.parcelas){fim=null}
+    if(S.edit){const f=fixed.find(x=>x.id===S.edit.id);if(f){Object.assign(f,{nome:desc,categoria:S.cat,valor:v,dia,inicio,fim});if(parcelas)f.parcelas=parcelas;else delete f.parcelas}}
+    else{const f={id:uid(),nome:desc,categoria:S.cat,valor:v,dia,inicio,fim};if(parcelas)f.parcelas=parcelas;fixed.push(f)}
     if(!save())return;
     closeSheet();render();toast(S.edit?"Despesa fixa atualizada":"Despesa fixa salva");
   }
@@ -424,6 +452,8 @@ $("sKeys").onclick=e=>{const b=e.target.closest("button");if(b)key(b.dataset.key
 $("sCats").onclick=e=>{const b=e.target.closest("button");if(b)setCat(b.dataset.cat)};
 $("sSeg").onclick=e=>{const b=e.target.closest("button");if(b)setTipo(b.dataset.tipo)};
 $("sSave").onclick=saveSheet;
+$("sDur").onclick=e=>{const b=e.target.closest("button");if(!b)return;setDur(b.dataset.dur);if(b.dataset.dur==="parc"&&!$("sParc").value){$("sParc").value=12;syncFromN()}};
+$("sParc").addEventListener("input",syncFromN);$("sFim").addEventListener("input",syncFromFim);$("sIni").addEventListener("input",()=>{if(S.dur==="parc")syncFromN()});
 $("sClose").onclick=closeSheet;$("backdrop").onclick=closeSheet;
 $("fab").onclick=()=>openSheet(location.hash==="#fixas"?"fixo":"var");
 $("sDel").onclick=()=>{
@@ -431,7 +461,9 @@ $("sDel").onclick=()=>{
   if(S.tipo==="var")daily=daily.filter(e=>e.id!==S.edit.id);else fixed=fixed.filter(f=>f.id!==S.edit.id);
   if(save()){closeSheet();render();toast("Excluído")}
 };
-$("sEnd").onclick=()=>{const f=fixed.find(x=>x.id===S.edit.id);if(!f)return;f.fim=f.fim?null:month;if(save()){closeSheet();render();toast(f.fim?`Encerrada a partir de ${monthName(shiftMonth(month,1),true)}`:"Despesa reativada")}};
+$("sEnd").onclick=()=>{const f=fixed.find(x=>x.id===S.edit.id);if(!f)return;
+  if(f.parcelas){const cheio=shiftMonth(f.inicio,f.parcelas-1);if(f.fim!==cheio){f.fim=cheio;if(save()){closeSheet();render();toast("Parcelas reativadas")}}else{f.fim=month<f.inicio?f.inicio:month;if(save()){closeSheet();render();toast(`Quitada em ${mLabel(f.fim)}`)}}return}
+  f.fim=f.fim?null:month;if(save()){closeSheet();render();toast(f.fim?`Encerrada a partir de ${monthName(shiftMonth(month,1),true)}`:"Despesa reativada")}};
 document.addEventListener("keydown",e=>{
   if($("sheet").hidden)return;
   if(e.key==="Escape")return closeSheet();
