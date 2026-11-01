@@ -143,6 +143,7 @@ p.note{margin:0;color:var(--muted);font-size:14px}
 .sheet.fixmode .cats svg{width:18px;height:18px}
 .sheet.fixmode .keys{gap:6px}
 .sheet.fixmode .keys button{height:40px;font-size:21px}
+.vhint{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:-4px}
 .descrow{display:flex;gap:8px;width:100%;align-items:stretch}
 .descrow input{flex:1;min-width:0;width:auto!important}
 .fixbtn{width:100%;height:42px;padding:0 12px;font-size:14px}
@@ -222,7 +223,7 @@ p.note{margin:0;color:var(--muted);font-size:14px}
     </div>
     <button type="button" class="credbtn fixbtn" id="sSeg" aria-pressed="false"><span class="sw" aria-hidden="true"></span>Despesa fixa mensal</button>
     <div class="amount">
-      <div class="val zero" id="sVal" aria-live="polite">R$ 0</div>
+      <span class="vhint" id="sValHint" hidden>Valor total da compra</span><div class="val zero" id="sVal" aria-live="polite">R$ 0</div>
       <div class="descrow"><input id="sDesc" placeholder="Descrição (opcional)" maxlength="60" aria-label="Descrição" autocomplete="off">
       <button type="button" class="credbtn" id="sPag" aria-pressed="false"><span class="sw" aria-hidden="true"></span>Compra a crédito</button></div>
     </div>
@@ -426,7 +427,7 @@ function key(k){
   showVal();err("");if(S.dur==="parc")fixNote();
 }
 function setCat(n){S.cat=n;document.querySelectorAll("#sCats button").forEach(b=>{const on=b.dataset.cat===n;const c=catOf(b.dataset.cat).c;b.setAttribute("aria-checked",on);b.style.borderColor=on?c:"transparent";b.style.background=on?hexA(c,.16):""})}
-function setTipo(t){
+function setTipo(t){setTimeout(()=>{$("sValHint").hidden=!(S.dur==="parc"&&S.tipo==="fixo")});
   S.tipo=t;
   $("sSeg").setAttribute("aria-pressed",t==="fixo");
   $("sFix").hidden=t!=="fixo";document.querySelector("#sheet .sheet").classList.toggle("fixmode",t==="fixo");$("sDate").hidden=t==="fixo";
@@ -435,11 +436,11 @@ function setTipo(t){
   $("sSave").textContent=e?"Salvar alterações":"Incluir";
   $("sEnd").hidden=!(e&&t==="fixo");
 }
-function setDur(d){S.dur=d;document.querySelectorAll("#sDur button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.dur===d));document.querySelectorAll(".parcf").forEach(l=>l.hidden=d!=="parc");$("sIni").parentElement.firstChild.textContent=d==="parc"?"Primeira parcela":"A partir de";fixNote()}
+function setDur(d){S.dur=d;$("sValHint").hidden=!(d==="parc"&&S.tipo==="fixo");document.querySelectorAll("#sDur button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.dur===d));document.querySelectorAll(".parcf").forEach(l=>l.hidden=d!=="parc");$("sIni").parentElement.firstChild.textContent=d==="parc"?"Primeira parcela":"A partir de";fixNote()}
 function fixNote(){
   if(S.dur!=="parc"){$("sFixNote").textContent="Entra automaticamente em todos os meses a partir do mês de início.";return}
   const n=parseInt($("sParc").value)||0,ini=$("sIni").value,fim=$("sFim").value,v=bufVal();
-  $("sFixNote").textContent=n>0&&ini&&fim?`Entra de ${mLabel(ini)} até ${mLabel(fim)} · ${n} parcela(s)${v>0?` · total ${fmt(v*n)}`:""}.`:"Informe o número de parcelas ou a última parcela.";
+  $("sFixNote").textContent=n>0&&ini&&fim?`${v>0?`${n}x de ${fmt(Math.round(v/n*100)/100)} · `:`${n} parcela(s) · `}de ${mLabel(ini)} até ${mLabel(fim)}.`:"Informe o número de parcelas ou a última parcela.";
 }
 function syncFromN(){const n=parseInt($("sParc").value)||0,ini=$("sIni").value;if(n>0&&ini)$("sFim").value=shiftMonth(ini,n-1);fixNote()}
 function syncFromFim(){const ini=$("sIni").value,fim=$("sFim").value;if(ini&&fim){const n=monthsBetween(ini,fim)+1;$("sParc").value=n>0?n:""}fixNote()}
@@ -452,7 +453,8 @@ function openSheet(tipo,edit){
   $("sSeg").hidden=!!edit;$("sEdit").hidden=!edit;
   const defDate=month===thisMonth?todayISO:`${month}-01`;
   if(edit){
-    S.buf=String(edit.valor.toFixed(2)).replace(".",",").replace(/,00$/,"");
+    const vEd=tipo==="fixo"&&edit.parcelas?(edit.total??edit.valor*edit.parcelas):edit.valor;
+    S.buf=String(vEd.toFixed(2)).replace(".",",").replace(/,00$/,"");
     $("sDesc").value=tipo==="fixo"?edit.nome:edit.descricao;
     setCat(edit.categoria);
     $("sDate").value=edit.data||defDate;
@@ -479,13 +481,15 @@ function saveSheet(){
     if(data.slice(0,7)!==month)month=data.slice(0,7);
     closeSheet();render();toast(S.edit?"Gasto atualizado":"Gasto incluído");
   }else{
-    const dia=Math.min(31,Math.max(1,parseInt($("sDia").value)||0))||null;
+    const dRaw=parseInt($("sDia").value);const dia=dRaw>0?Math.min(31,dRaw):null;
     const inicio=$("sIni").value||month;
     let parcelas=null,fim=S.edit?S.edit.fim:null;
     if(S.dur==="parc"){parcelas=parseInt($("sParc").value)||0;if(!(parcelas>=1&&parcelas<=360))return err("Informe o número de parcelas (ou a última parcela).");fim=shiftMonth(inicio,parcelas-1)}
     else if(S.edit&&S.edit.parcelas){fim=null}
-    if(S.edit){const f=fixed.find(x=>x.id===S.edit.id);if(f){Object.assign(f,{nome:desc,categoria:S.cat,valor:v,dia,inicio,fim,pag:S.pag});if(parcelas)f.parcelas=parcelas;else delete f.parcelas}}
-    else{const f={id:uid(),nome:desc,categoria:S.cat,valor:v,dia,inicio,fim,pag:S.pag};if(parcelas)f.parcelas=parcelas;fixed.push(f)}
+    const mensal=parcelas?Math.round(v/parcelas*100)/100:v;
+    const apply=f=>{Object.assign(f,{nome:desc,categoria:S.cat,valor:mensal,dia,inicio,fim,pag:S.pag});if(parcelas){f.parcelas=parcelas;f.total=v}else{delete f.parcelas;delete f.total}};
+    if(S.edit){const f=fixed.find(x=>x.id===S.edit.id);if(f)apply(f)}
+    else{const f={id:uid()};apply(f);fixed.push(f)}
     if(!save())return;
     closeSheet();render();toast(S.edit?"Despesa fixa atualizada":"Despesa fixa incluída");
   }
