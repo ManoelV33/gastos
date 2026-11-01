@@ -82,6 +82,7 @@ table{border-collapse:collapse;width:100%;font-size:13px}
 th,td{padding:9px 4px;text-align:right;border-bottom:1px solid var(--line)}
 th{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 td:first-child,th:first-child{text-align:left}
+tr.tot td{font-weight:700;border-top:2px solid var(--line);border-bottom:0}
 tr.sel td{font-weight:700;color:var(--accent)}
 .rank{display:grid;grid-template-columns:42px 1fr auto;gap:12px;align-items:center}
 .rank .bar{height:8px;border-radius:4px;background:var(--surf2);overflow:hidden;margin-top:6px}
@@ -144,6 +145,7 @@ p.note{margin:0;color:var(--muted);font-size:14px}
 .sheet.fixmode .keys button{height:40px;font-size:21px}
 .descrow{display:flex;gap:8px;width:100%;align-items:stretch}
 .descrow input{flex:1;min-width:0;width:auto!important}
+.fixbtn{width:100%;height:42px;padding:0 12px;font-size:14px}
 .credbtn{flex:none;display:flex;align-items:center;gap:8px;border:0;border-radius:10px;background:var(--surf2);color:var(--muted);font-weight:700;font-size:13px;padding:0 10px;white-space:nowrap}
 .credbtn[aria-pressed="true"]{color:var(--ink)}
 .credbtn .sw{position:relative;width:34px;height:20px;border-radius:10px;background:#2A4470;flex:none;transition:background .15s}
@@ -218,10 +220,7 @@ p.note{margin:0;color:var(--muted);font-size:14px}
       <h2 id="sTitle">Novo gasto</h2>
       <input class="datechip" id="sDate" type="date" aria-label="Data do gasto">
     </div>
-    <div class="segc" id="sSeg" role="group" aria-label="Tipo de gasto">
-      <button type="button" data-tipo="var" aria-pressed="true">Variável</button>
-      <button type="button" data-tipo="fixo" aria-pressed="false">Fixo mensal</button>
-    </div>
+    <button type="button" class="credbtn fixbtn" id="sSeg" aria-pressed="false"><span class="sw" aria-hidden="true"></span>Despesa fixa mensal</button>
     <div class="amount">
       <div class="val zero" id="sVal" aria-live="polite">R$ 0</div>
       <div class="descrow"><input id="sDesc" placeholder="Descrição (opcional)" maxlength="60" aria-label="Descrição" autocomplete="off">
@@ -354,7 +353,7 @@ function renderFixas(){
   ${rows?`<button class="btn ghost" type="button" data-open="fixo">Nova despesa fixa</button>`:""}`;
 }
 function renderComparativo(){
-  const ms=[];for(let k=11;k>=0;k--)ms.push(shiftMonth(month,-k));
+  const Y=month.slice(0,4),ms=[];for(let k=1;k<=12;k++)ms.push(`${Y}-${pad(k)}`);
   const data=ms.map(m=>({m,...totals(m)}));
   const max=Math.max(...data.map(x=>x.t),1);
   const step=[50,100,200,250,500,1000,2000,2500,5000,10000,20000,50000,100000].find(s=>max/s<=4)||Math.ceil(max/4);
@@ -370,21 +369,25 @@ function renderComparativo(){
     if(x.d>0)g+=`<rect x="${x0}" y="${y(x.t)}" width="${bw}" height="${y(x.f)-y(x.t)}" rx="3" fill="var(--daily)" opacity="${op}"/>`;
     g+=`<text x="${cx}" y="${H-B+18}" text-anchor="middle" style="${sel?"fill:var(--ink);font-weight:700":""}">${monthName(x.m,true)}</text></g>`});
   if(avg)g+=`<line x1="${L}" x2="${W-R}" y1="${y(avg)}" y2="${y(avg)}" stroke="#EDEDF0" stroke-dasharray="4 4" opacity=".5"/>`;
-  const rows=data.slice().reverse().map((x,i,a)=>{const p=a[i+1];let v="—";if(p&&p.t>0){const d=(x.t-p.t)/p.t*100;v=`<span style="color:var(${d>0?"--up":"--down"})">${d>0?"+":""}${d.toFixed(0)}%</span>`}
-    return `<tr class="${x.m===month?"sel":""}"><td>${monthName(x.m,true)}/${x.m.slice(2,4)}</td><td>${Math.round(x.d).toLocaleString("pt-BR")}</td><td>${Math.round(x.f).toLocaleString("pt-BR")}</td><td>${Math.round(x.t).toLocaleString("pt-BR")}</td><td>${v}</td></tr>`}).join("");
+  const rows=data.map((x,i)=>{const p=i?data[i-1]:{m:shiftMonth(x.m,-1),...totals(shiftMonth(x.m,-1))};let v="—";if(p&&p.t>0&&x.t>0){const d=(x.t-p.t)/p.t*100;v=`<span style="color:var(${d>0?"--up":"--down"})">${d>0?"+":""}${d.toFixed(0)}%</span>`}
+    return `<tr class="${x.m===month?"sel":""}"><td>${monthName(x.m,true)}</td><td>${Math.round(x.d).toLocaleString("pt-BR")}</td><td>${Math.round(x.f).toLocaleString("pt-BR")}</td><td>${Math.round(x.t).toLocaleString("pt-BR")}</td><td>${v}</td></tr>`}).join("");
   $("v-comparativo").innerHTML=`
-  <div class="card"><div class="cardhead"><span>Últimos 12 meses</span><span>toque num mês</span></div>
+  <div class="card"><div class="cardhead"><span>Ano ${Y}</span><span>toque num mês</span></div>
    <div class="leg2"><span><i class="dot" style="display:inline-block;background:var(--daily)"></i> Dia a dia</span><span><i class="dot" style="display:inline-block;background:var(--fixed)"></i> Fixas</span>${avg?`<span>– – média ${fmt(avg)}</span>`:""}</div>
-   <div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gastos dos últimos 12 meses">${g}</svg></div></div>
+   <div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gastos de cada mês de ${Y}">${g}</svg></div></div>
   <div class="card"><div class="cardhead"><span>Mês a mês</span><span>em R$</span></div>
-   <table><thead><tr><th>Mês</th><th>Dia a dia</th><th>Fixas</th><th>Total</th><th>Var.</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+   <table><thead><tr><th>Mês</th><th>Dia a dia</th><th>Fixas</th><th>Total</th><th>Var.</th></tr></thead><tbody>${rows}<tr class="tot"><td>Total ${Y}</td><td>${Math.round(data.reduce((s,x)=>s+x.d,0)).toLocaleString("pt-BR")}</td><td>${Math.round(data.reduce((s,x)=>s+x.f,0)).toLocaleString("pt-BR")}</td><td>${Math.round(data.reduce((s,x)=>s+x.t,0)).toLocaleString("pt-BR")}</td><td></td></tr></tbody></table></div>`;
 }
+let rankMode="mes";
+function byCatYear(Y){const r={};for(let k=1;k<=12;k++)byCat(`${Y}-${pad(k)}`).forEach(c=>r[c.n]=(r[c.n]||0)+c.v);return Object.entries(r).map(([n,v])=>({n,v})).sort((a,b)=>b.v-a.v)}
 function renderRanking(){
-  const cats=byCat(month),T=cats.reduce((s,c)=>s+c.v,0),max=cats[0]?.v||1;
-  $("v-ranking").innerHTML=cats.length?`
-  <div class="card"><div class="cardhead"><span>Por categoria</span><span>${fmt(T)}</span></div>
+  const Y=month.slice(0,4),per=rankMode==="ano"?Y:monthName(month);
+  const cats=rankMode==="ano"?byCatYear(Y):byCat(month),T=cats.reduce((s,c)=>s+c.v,0),max=cats[0]?.v||1;
+  const tog=`<div class="sortseg" id="rankSeg"><button type="button" data-rank="mes" aria-pressed="${rankMode==="mes"}">Mês</button><button type="button" data-rank="ano" aria-pressed="${rankMode==="ano"}">Ano ${Y}</button></div>`;
+  $("v-ranking").innerHTML=tog+(cats.length?`
+  <div class="card"><div class="cardhead"><span>Por categoria · ${esc(per)}</span><span>${fmt(T)}</span></div>
    ${cats.map(c=>{const k=catOf(c.n);return `<div class="rank">${catIcon(c.n)}<div class="n">${esc(c.n)}<div class="bar"><i style="width:${c.v/max*100}%;background:${k.c}"></i></div></div><div class="r">${fmt(c.v)}<span>${pct(c.v,T)}</span></div></div>`}).join("")}</div>`
-  :`<div class="empty"><span>Sem gastos em ${monthName(month)} ainda.</span></div>`;
+  :`<div class="empty"><span>Sem gastos em ${esc(per)} ainda.</span></div>`);
 }
 function renderBackup(){$("bkCount").textContent=`${daily.length} gasto(s) · ${fixed.length} fixa(s)`}
 
@@ -425,7 +428,7 @@ function key(k){
 function setCat(n){S.cat=n;document.querySelectorAll("#sCats button").forEach(b=>{const on=b.dataset.cat===n;const c=catOf(b.dataset.cat).c;b.setAttribute("aria-checked",on);b.style.borderColor=on?c:"transparent";b.style.background=on?hexA(c,.16):""})}
 function setTipo(t){
   S.tipo=t;
-  document.querySelectorAll("#sSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.tipo===t));
+  $("sSeg").setAttribute("aria-pressed",t==="fixo");
   $("sFix").hidden=t!=="fixo";document.querySelector("#sheet .sheet").classList.toggle("fixmode",t==="fixo");$("sDate").hidden=t==="fixo";
   const e=!!S.edit;
   $("sTitle").textContent=t==="fixo"?(e?"Editar despesa fixa":"Nova despesa fixa"):(e?"Editar gasto":"Novo gasto");
@@ -489,7 +492,7 @@ function saveSheet(){
 }
 $("sKeys").onclick=e=>{const b=e.target.closest("button");if(b)key(b.dataset.key)};
 $("sCats").onclick=e=>{const b=e.target.closest("button");if(b)setCat(b.dataset.cat)};
-$("sSeg").onclick=e=>{const b=e.target.closest("button");if(b)setTipo(b.dataset.tipo)};
+$("sSeg").onclick=()=>setTipo(S.tipo==="fixo"?"var":"fixo");
 $("sSave").onclick=saveSheet;
 $("sPag").onclick=()=>setPag(S.pag==="credito"?"vista":"credito");
 $("sDur").onclick=e=>{const b=e.target.closest("button");if(!b)return;setDur(b.dataset.dur);if(b.dataset.dur==="parc"&&!$("sParc").value){$("sParc").value=12;syncFromN()}};
@@ -511,6 +514,7 @@ document.addEventListener("keydown",e=>{
   if(/^[0-9]$/.test(e.key))key(e.key);else if(e.key===","||e.key===".")key(",");else if(e.key==="Backspace")key("back");else if(e.key==="Enter")saveSheet();
 });
 document.addEventListener("click",e=>{
+  const rk=e.target.closest("[data-rank]");if(rk){rankMode=rk.dataset.rank;renderRanking();return}
   const so=e.target.closest("[data-sort]");if(so){sortMode=so.dataset.sort;try{localStorage.setItem("bm_sort",sortMode)}catch(x){}renderDia();return}
   const o=e.target.closest("[data-open]");if(o)return openSheet(o.dataset.open);
   const d=e.target.closest("[data-edit-daily]");if(d){const it=daily.find(x=>x.id===d.dataset.editDaily);if(it)openSheet("var",it);return}
