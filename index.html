@@ -142,14 +142,15 @@ p.note{margin:0;color:var(--muted);font-size:14px}
       <div class="name">Caderneta de Gastos</div>
       <div class="month"><button id="prev" aria-label="Mês anterior">‹</button><span id="monthLabel">—</span><button id="next" aria-label="Próximo mês">›</button></div>
     </div>
-    <a class="iconbtn" href="#backup" aria-label="Backup"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a5 5 0 1 1 1-9.9A6 6 0 0 1 19 10a4 4 0 0 1 0 8z"/></svg></a>
+    <button class="iconbtn" id="bkBtn" type="button" aria-label="Backup"><svg class="i" id="bkIcoCloud" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a5 5 0 1 1 1-9.9A6 6 0 0 1 19 10a4 4 0 0 1 0 8z"/></svg><svg class="i" id="bkIcoClose" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </header>
 
   <section id="v-dia" class="view"></section>
   <section id="v-fixas" class="view" hidden></section>
   <section id="v-comparativo" class="view" hidden></section>
   <section id="v-ranking" class="view" hidden></section>
-  <section id="v-backup" class="view" hidden>
+  <section id="v-backup" class="view" hidden style="display:flex;flex-direction:column;gap:14px">
+    <button class="btn ghost small" id="bkBack" type="button" style="align-self:flex-start;margin-bottom:12px">‹ Voltar</button>
     <div class="card">
       <div class="cardhead"><span>Cópia de segurança</span><span id="bkCount"></span></div>
       <p class="note">Seus lançamentos ficam guardados só neste aparelho. Exporte um backup de vez em quando e guarde o arquivo no iCloud, Drive ou WhatsApp. Para passar os dados para outro aparelho, exporte aqui e importe lá.</p>
@@ -337,8 +338,12 @@ function renderBackup(){$("bkCount").textContent=`${daily.length} gasto(s) · ${
 
 /* ---------- navegação ---------- */
 const VIEWS=["dia","fixas","comparativo","ranking","backup"];
-function route(){const h=location.hash.slice(1);const v=VIEWS.includes(h)?h:"dia";VIEWS.forEach(x=>$("v-"+x).hidden=x!==v);document.querySelectorAll(".nav a").forEach(a=>{if(a.getAttribute("href")==="#"+v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});window.scrollTo(0,0)}
+let lastView="dia";
+function route(){const h=location.hash.slice(1);const v=VIEWS.includes(h)?h:"dia";if(v!=="backup")lastView=v;const onBk=v==="backup";$("bkIcoCloud").toggleAttribute("hidden",onBk);$("bkIcoClose").toggleAttribute("hidden",!onBk);$("bkBtn").setAttribute("aria-label",onBk?"Fechar backup":"Backup");VIEWS.forEach(x=>$("v-"+x).hidden=x!==v);document.querySelectorAll(".nav a").forEach(a=>{if(a.getAttribute("href")==="#"+v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});window.scrollTo(0,0)}
 addEventListener("hashchange",route);
+function leaveBackup(){location.hash=lastView}
+$("bkBtn").onclick=()=>{if(location.hash==="#backup")leaveBackup();else location.hash="backup"};
+$("bkBack").onclick=leaveBackup;
 $("prev").onclick=()=>{month=shiftMonth(month,-1);render()};
 $("next").onclick=()=>{month=shiftMonth(month,1);render()};
 let rz;addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(renderComparativo,150)});
