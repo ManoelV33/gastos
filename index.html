@@ -144,6 +144,12 @@ p.note{margin:0;color:var(--muted);font-size:14px}
 .sheet.fixmode .keys button{height:40px;font-size:21px}
 .descrow{display:flex;gap:8px;width:100%;align-items:stretch}
 .descrow input{flex:1;min-width:0;width:auto!important}
+.credbtn{flex:none;display:flex;align-items:center;gap:8px;border:0;border-radius:10px;background:var(--surf2);color:var(--muted);font-weight:700;font-size:13px;padding:0 10px;white-space:nowrap}
+.credbtn[aria-pressed="true"]{color:var(--ink)}
+.credbtn .sw{position:relative;width:34px;height:20px;border-radius:10px;background:#2A4470;flex:none;transition:background .15s}
+.credbtn .sw::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#C9D4E5;transition:transform .15s}
+.credbtn[aria-pressed="true"] .sw{background:var(--accent)}
+.credbtn[aria-pressed="true"] .sw::after{transform:translateX(14px);background:#fff}
 .segc.pag{flex:none;width:168px;padding:3px}
 .segc.pag button{height:auto;min-height:34px;font-size:13px}
 .tag{font-weight:600}.tag.cr{color:#B9A4FF}.tag.av{color:#7DD3A8}
@@ -219,7 +225,7 @@ p.note{margin:0;color:var(--muted);font-size:14px}
     <div class="amount">
       <div class="val zero" id="sVal" aria-live="polite">R$ 0</div>
       <div class="descrow"><input id="sDesc" placeholder="Descrição (opcional)" maxlength="60" aria-label="Descrição" autocomplete="off">
-      <div class="segc pag" id="sPag" role="group" aria-label="Forma de pagamento"><button type="button" data-pag="vista" aria-pressed="true">À vista</button><button type="button" data-pag="credito" aria-pressed="false">Crédito</button></div></div>
+      <button type="button" class="credbtn" id="sPag" aria-pressed="false"><span class="sw" aria-hidden="true"></span>Compra a crédito</button></div>
     </div>
     <div class="fixrow" id="sFix" hidden>
       <div class="note"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width:20px;height:20px"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg><span id="sFixNote">Entra automaticamente em todos os meses a partir do mês de início.</span></div>
@@ -310,19 +316,19 @@ function renderDia(){
   const days={};list.forEach(e=>(days[e.data]=days[e.data]||[]).push(e));
   let items="";
   if(sortMode==="valor"){
-    [...list].sort((a,b)=>b.valor-a.valor).forEach(e=>{items+=`<button class="item" type="button" data-edit-daily="${esc(e.id)}">${catIcon(e.categoria)}<span class="t"><b>${esc(e.descricao)}</b><span>${esc(e.categoria)} · ${e.data.slice(8)}/${e.data.slice(5,7)} · ${pagTag(e)}</span></span><span class="v">− ${fmt(e.valor)}</span></button>`});
+    [...list].sort((a,b)=>b.valor-a.valor).forEach(e=>{items+=`<button class="item" type="button" data-edit-daily="${esc(e.id)}">${catIcon(e.categoria)}<span class="t"><b>${esc(e.descricao)}</b><span>${esc(e.categoria)} · ${e.data.slice(8)}/${e.data.slice(5,7)}${pagTag(e)}</span></span><span class="v">− ${fmt(e.valor)}</span></button>`});
   }else Object.keys(days).forEach(day=>{
     const [y,m,d]=day.split("-").map(Number);
     let lab=new Date(y,m-1,d).toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit"});
     if(day===todayISO)lab="Hoje · "+lab;
     const sum=days[day].reduce((s,e)=>s+e.valor,0);
     items+=`<div class="dayhead"><span>${esc(lab)}</span><span>${fmt(sum)}</span></div>`;
-    days[day].forEach(e=>{items+=`<button class="item" type="button" data-edit-daily="${esc(e.id)}">${catIcon(e.categoria)}<span class="t"><b>${esc(e.descricao)}</b><span>${esc(e.categoria)} · ${pagTag(e)}</span></span><span class="v">− ${fmt(e.valor)}</span></button>`});
+    days[day].forEach(e=>{items+=`<button class="item" type="button" data-edit-daily="${esc(e.id)}">${catIcon(e.categoria)}<span class="t"><b>${esc(e.descricao)}</b><span>${esc(e.categoria)}${pagTag(e)}</span></span><span class="v">− ${fmt(e.valor)}</span></button>`});
   });
   $("v-dia").innerHTML=`
   <div class="total"><span class="label">Gasto no mês</span><span class="big">${bigMoney(T.t)}</span>
    <div class="chiprow">${deltaHtml()}</div>
-   <div class="paybar"><span>Crédito <b>${fmt(PT.cr)}</b></span><span>À vista <b>${fmt(PT.av)}</b></span></div></div>
+   <div class="paybar"><span>No crédito <b>${fmt(PT.cr)}</b></span></div></div>
   ${T.t?`<div class="card"><div class="cardhead"><span>Por categoria</span><a href="#ranking" style="color:var(--muted);font-size:13px;font-weight:600;text-decoration:none">ver tudo</a></div><div class="seg">${segs}</div><div class="legend">${leg}</div></div>`:""}
   ${list.length>1?`<div class="listhead"><span class="label">Gastos do mês</span><div class="sortseg" id="sortSeg"><button type="button" data-sort="data" aria-pressed="${sortMode==="data"}">Por data</button><button type="button" data-sort="valor" aria-pressed="${sortMode==="valor"}">Maior valor</button></div></div>`:""}
   <div>${items||`<div class="empty"><span>Nenhum gasto do dia a dia em ${monthName(month)}.</span><button class="btn small" type="button" data-open="var">Lançar o primeiro gasto</button></div>`}</div>`;
@@ -341,7 +347,7 @@ function renderFixas(){
       pill=`<span class="pill ${on?"":"off"}">${on?"ativa":"fora do mês"}</span>`;
       sub=[f.categoria,f.dia?`vence dia ${f.dia}`:"",`desde ${mLabel(f.inicio)}`,f.fim?`até ${mLabel(f.fim)}`:""].filter(Boolean).join(" · ");
     }
-    return `<button class="item" type="button" data-edit-fixed="${esc(f.id)}">${catIcon(f.categoria)}<span class="t"><b>${esc(f.nome)}${pill}</b><span>${esc(sub)} · ${pagTag(f)}</span></span><span class="v">${fmt(f.valor)}</span></button>`}).join("");
+    return `<button class="item" type="button" data-edit-fixed="${esc(f.id)}">${catIcon(f.categoria)}<span class="t"><b>${esc(f.nome)}${pill}</b><span>${esc(sub)}${pagTag(f)}</span></span><span class="v">${fmt(f.valor)}</span></button>`}).join("");
   $("v-fixas").innerHTML=`
   <div class="total"><span class="label">Fixas em ${monthName(month)}</span><span class="big">${bigMoney(sum)}</span><div class="chiprow"><span>${act.length} despesa(s) valendo neste mês${act.filter(f=>f.parcelas).length?` · ${act.filter(f=>f.parcelas).length} parcelada(s)`:""}</span></div></div>
   <div>${rows||`<div class="empty"><span>Nenhuma despesa fixa ainda. Cadastre aluguel, internet, academia ou compras parceladas. Elas entram sozinhas nos meses certos.</span><button class="btn small" type="button" data-open="fixo">Cadastrar despesa fixa</button></div>`}</div>
@@ -434,9 +440,9 @@ function fixNote(){
 }
 function syncFromN(){const n=parseInt($("sParc").value)||0,ini=$("sIni").value;if(n>0&&ini)$("sFim").value=shiftMonth(ini,n-1);fixNote()}
 function syncFromFim(){const ini=$("sIni").value,fim=$("sFim").value;if(ini&&fim){const n=monthsBetween(ini,fim)+1;$("sParc").value=n>0?n:""}fixNote()}
-function setPag(p){S.pag=p;document.querySelectorAll("#sPag button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.pag===p))}
+function setPag(p){S.pag=p;$("sPag").setAttribute("aria-pressed",p==="credito")}
 const pagOf=x=>x.pag==="credito"?"credito":"vista";
-const pagTag=x=>pagOf(x)==="credito"?'<span class="tag cr">Crédito</span>':'<span class="tag av">À vista</span>';
+const pagTag=x=>pagOf(x)==="credito"?' · <span class="tag cr">Crédito</span>':'';
 function err(m){$("sErr").textContent=m;$("sErr").hidden=!m}
 function openSheet(tipo,edit){
   S.edit=edit||null;S.delArm=false;$("sDel").textContent="Excluir";
@@ -485,7 +491,7 @@ $("sKeys").onclick=e=>{const b=e.target.closest("button");if(b)key(b.dataset.key
 $("sCats").onclick=e=>{const b=e.target.closest("button");if(b)setCat(b.dataset.cat)};
 $("sSeg").onclick=e=>{const b=e.target.closest("button");if(b)setTipo(b.dataset.tipo)};
 $("sSave").onclick=saveSheet;
-$("sPag").onclick=e=>{const b=e.target.closest("button");if(b)setPag(b.dataset.pag)};
+$("sPag").onclick=()=>setPag(S.pag==="credito"?"vista":"credito");
 $("sDur").onclick=e=>{const b=e.target.closest("button");if(!b)return;setDur(b.dataset.dur);if(b.dataset.dur==="parc"&&!$("sParc").value){$("sParc").value=12;syncFromN()}};
 $("sParc").addEventListener("input",syncFromN);$("sFim").addEventListener("input",syncFromFim);$("sIni").addEventListener("input",()=>{if(S.dur==="parc")syncFromN()});
 $("sClose").onclick=closeSheet;$("backdrop").onclick=closeSheet;
