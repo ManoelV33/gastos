@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Caderneta de Gastos</title>
+<title>Bye Money</title>
 <meta name="theme-color" content="#0A0A0B">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Gastos">
+<meta name="apple-mobile-web-app-title" content="Bye Money">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon-192-v8.png">
-<link rel="apple-touch-icon" href="icon-180-v8.png">
+<link rel="icon" href="icon-192-v9.png">
+<link rel="apple-touch-icon" href="icon-180-v9.png">
 <style>
 @font-face{font-family:Manrope;font-weight:400;font-display:swap;src:url(fonts/manrope-latin-400-normal.woff2) format("woff2")}
 @font-face{font-family:Manrope;font-weight:600;font-display:swap;src:url(fonts/manrope-latin-600-normal.woff2) format("woff2")}
@@ -20,9 +20,9 @@
 :root{
   --bg:#0A0A0B; --surf:#151518; --surf2:#222227; --line:#26262C;
   --ink:#EDEDF0; --muted:#8E8E98; --dim:#5E5E68;
-  --accent:#FF8A1F; --on-accent:#111111; --accent-soft:rgba(255,138,31,.14);
+  --accent:#10B981; --on-accent:#04140B; --accent-soft:rgba(16,185,129,.14);
   --up:#FF6B5B; --up-soft:rgba(255,107,91,.15); --down:#3DDC84; --down-soft:rgba(61,220,132,.14);
-  --daily:#FF8A1F; --fixed:#5B95FF;
+  --daily:#10B981; --fixed:#5B95FF;
   --f:"Manrope",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
   color-scheme:dark;
 }
@@ -139,7 +139,7 @@ p.note{margin:0;color:var(--muted);font-size:14px}
 <main class="app" id="app">
   <header class="top">
     <div>
-      <div class="name">Caderneta de Gastos</div>
+      <div class="name">Bye Money</div>
       <div class="month"><button id="prev" aria-label="Mês anterior">‹</button><span id="monthLabel">—</span><button id="next" aria-label="Próximo mês">›</button></div>
     </div>
     <button class="iconbtn" id="bkBtn" type="button" aria-label="Backup"><svg class="i" id="bkIcoCloud" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a5 5 0 1 1 1-9.9A6 6 0 0 1 19 10a4 4 0 0 1 0 8z"/></svg><svg class="i" id="bkIcoClose" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -213,7 +213,7 @@ p.note{margin:0;color:var(--muted);font-size:14px}
 /* ---------- base ---------- */
 const CATS=[
  {n:"Alimentação",c:"#FF5D73",p:'<path d="M7 2v20M4 2v6a3 3 0 0 0 6 0V2M17 2c-2 2-3 5-3 8h3v12"/>'},
- {n:"Mercado",c:"#00CC4B",p:'<path d="M3 4h2l2.5 11h11L21 7H6.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>'},
+ {n:"Mercado",c:"#38BDF8",p:'<path d="M3 4h2l2.5 11h11L21 7H6.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>'},
  {n:"Transporte",c:"#5B95FF",p:'<path d="M3 16v-4l2-5h14l2 5v4"/><path d="M3 16h18"/><circle cx="7.5" cy="17" r="1.5"/><circle cx="16.5" cy="17" r="1.5"/>'},
  {n:"Moradia",c:"#8B7CFF",p:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'},
  {n:"Contas",c:"#4FD1C5",p:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'},
@@ -448,8 +448,8 @@ document.addEventListener("click",e=>{
 /* ---------- backup ---------- */
 function bkMsg(t){$("bkMsg").textContent=t;$("bkMsg").hidden=!t}
 $("bkExport").onclick=async()=>{
-  const payload=JSON.stringify({app:"Gastos",versao:2,exportadoEm:new Date().toISOString(),gastos:daily,fixas:fixed},null,1);
-  const name=`gastos-backup-${todayISO}.json`;
+  const payload=JSON.stringify({app:"Bye Money",versao:2,exportadoEm:new Date().toISOString(),gastos:daily,fixas:fixed},null,1);
+  const name=`bye-money-backup-${todayISO}.json`;
   const file=new File([payload],name,{type:"application/json"});
   try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});bkMsg("Backup gerado: "+name);return}}catch(e){if(e.name==="AbortError")return}
   const a=document.createElement("a");a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);
@@ -460,7 +460,7 @@ $("bkFile").onchange=e=>{
   const f=e.target.files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.gastos)||!Array.isArray(d.fixas))throw 0;
       pending=d;$("bkConfirmText").textContent=`O arquivo tem ${d.gastos.length} gasto(s) e ${d.fixas.length} despesa(s) fixa(s)${d.exportadoEm?`, exportado em ${new Date(d.exportadoEm).toLocaleDateString("pt-BR")}`:""}. Os ${daily.length} gasto(s) e ${fixed.length} fixa(s) que estão agora neste aparelho serão apagados.`;$("bkConfirm").hidden=false;bkMsg("")}
-    catch(err){bkMsg("Este arquivo não é um backup do Gastos. Escolha o arquivo .json que você exportou.")}
+    catch(err){bkMsg("Este arquivo não é um backup do Bye Money. Escolha o arquivo .json que você exportou.")}
     e.target.value=""};
   r.readAsText(f)};
 $("bkYes").onclick=()=>{if(!pending)return;daily=pending.gastos.filter(x=>x&&x.data&&typeof x.valor==="number");fixed=pending.fixas.filter(x=>x&&x.inicio&&typeof x.valor==="number");
