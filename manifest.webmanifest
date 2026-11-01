@@ -1,15 +1,15 @@
 {
   "name": "Gastos",
   "short_name": "Gastos",
-  "description": "Controle pessoal de gastos: dia a dia, despesas fixas, comparativo mensal e onde mais gastei.",
+  "description": "Caderneta de Gastos: dia a dia, despesas fixas, comparativo mensal e onde mais gastei.",
   "lang": "pt-BR",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#15222A",
-  "theme_color": "#15222A",
+  "background_color": "#0A0A0B",
+  "theme_color": "#0A0A0B",
   "icons": [
-    {"src": "icon-192-v7.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-    {"src": "icon-512-v7.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+    {"src": "icon-192-v8.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512-v8.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
   ]
 }
