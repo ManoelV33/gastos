@@ -4,25 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Bye Money</title>
-<meta name="theme-color" content="#0A0A0B">
+<meta name="theme-color" content="#000814">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Bye Money">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon-192-v9.png">
-<link rel="apple-touch-icon" href="icon-180-v9.png">
+<link rel="icon" href="icon-192-v10.png">
+<link rel="apple-touch-icon" href="icon-180-v10.png">
 <style>
 @font-face{font-family:Manrope;font-weight:400;font-display:swap;src:url(fonts/manrope-latin-400-normal.woff2) format("woff2")}
 @font-face{font-family:Manrope;font-weight:600;font-display:swap;src:url(fonts/manrope-latin-600-normal.woff2) format("woff2")}
 @font-face{font-family:Manrope;font-weight:700;font-display:swap;src:url(fonts/manrope-latin-700-normal.woff2) format("woff2")}
 /* Layout: app de uma coluna — cabeçalho com mês, conteúdo da aba, barra de abas fixa embaixo com botão + central */
 :root{
-  --bg:#0A0A0B; --surf:#151518; --surf2:#222227; --line:#26262C;
-  --ink:#EDEDF0; --muted:#8E8E98; --dim:#5E5E68;
-  --accent:#10B981; --on-accent:#04140B; --accent-soft:rgba(16,185,129,.14);
+  --bg:#000814; --surf:#001533; --surf2:#00204D; --line:#0B2B57;
+  --ink:#EDF2FA; --muted:#8FA3C0; --dim:#4E6385;
+  --accent:#1C6CFF; --on-accent:#FFFFFF; --accent-soft:rgba(28,108,255,.16);
   --up:#FF6B5B; --up-soft:rgba(255,107,91,.15); --down:#3DDC84; --down-soft:rgba(61,220,132,.14);
-  --daily:#10B981; --fixed:#5B95FF;
+  --daily:#1C6CFF; --fixed:#8B7CFF;
   --f:"Manrope",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
   color-scheme:dark;
 }
@@ -128,7 +128,7 @@ p.note{margin:0;color:var(--muted);font-size:14px}
 .cats svg{width:20px;height:20px}
 .keys{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .keys button{height:46px;border:0;border-radius:12px;background:var(--surf2);font-size:23px;font-weight:600;display:flex;align-items:center;justify-content:center}
-.keys button:active{background:#2E2E35}
+.keys button:active{background:#0F2E66}
 .err{margin:0;color:var(--up);font-size:13px;text-align:center}
 .editrow{display:flex;gap:8px;flex-wrap:wrap}
 .editrow .btn{flex:1;height:46px;font-size:14px}
@@ -213,14 +213,14 @@ p.note{margin:0;color:var(--muted);font-size:14px}
 /* ---------- base ---------- */
 const CATS=[
  {n:"Alimentação",c:"#FF5D73",p:'<path d="M7 2v20M4 2v6a3 3 0 0 0 6 0V2M17 2c-2 2-3 5-3 8h3v12"/>'},
- {n:"Mercado",c:"#38BDF8",p:'<path d="M3 4h2l2.5 11h11L21 7H6.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>'},
+ {n:"Mercado",c:"#00CC4B",p:'<path d="M3 4h2l2.5 11h11L21 7H6.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>'},
  {n:"Transporte",c:"#5B95FF",p:'<path d="M3 16v-4l2-5h14l2 5v4"/><path d="M3 16h18"/><circle cx="7.5" cy="17" r="1.5"/><circle cx="16.5" cy="17" r="1.5"/>'},
  {n:"Moradia",c:"#8B7CFF",p:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'},
  {n:"Contas",c:"#4FD1C5",p:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'},
- {n:"Saúde",c:"#E879F9",p:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>'},
+ {n:"Saúde",c:"#EF4444",p:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>'},
  {n:"Educação",c:"#7DD3FC",p:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/>'},
  {n:"Lazer",c:"#FECE4C",p:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>'},
- {n:"Compras",c:"#F9A8D4",p:'<path d="M5 8h14l-1 13H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>'},
+ {n:"Compras",c:"#FFFFFF",p:'<path d="M5 8h14l-1 13H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>'},
  {n:"Outros",c:"#9CA3AF",p:'<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>'}
 ];
 const catOf=n=>CATS.find(c=>c.n===n)||CATS[CATS.length-1];
@@ -266,7 +266,7 @@ function renderDia(){
   let segs="",leg="";
   const top=cats.slice(0,4),rest=cats.slice(4).reduce((s,c)=>s+c.v,0);
   top.forEach(c=>{const k=catOf(c.n);segs+=`<i style="width:${c.v/T.t*100}%;background:${k.c}"></i>`;leg+=`<span><i class="dot" style="background:${k.c}"></i>${esc(c.n)} <b>${pct(c.v,T.t)}</b></span>`});
-  if(rest>0){segs+=`<i style="width:${rest/T.t*100}%;background:#3A3A42"></i>`;leg+=`<span><i class="dot" style="background:#3A3A42"></i>Outras <b>${pct(rest,T.t)}</b></span>`}
+  if(rest>0){segs+=`<i style="width:${rest/T.t*100}%;background:#2A4470"></i>`;leg+=`<span><i class="dot" style="background:#2A4470"></i>Outras <b>${pct(rest,T.t)}</b></span>`}
   const list=daily.filter(e=>e.data.startsWith(month)).sort((a,b)=>b.data.localeCompare(a.data)||(b.criado||"").localeCompare(a.criado||""));
   const days={};list.forEach(e=>(days[e.data]=days[e.data]||[]).push(e));
   let items="";
@@ -306,7 +306,7 @@ function renderComparativo(){
   const W=Math.max(300,Math.round(($("app").clientWidth||400)-68)),H=230,L=40,R=6,T=16,B=30,cw=(W-L-R)/12,bw=Math.min(cw*.62,22);
   const y=v=>T+(H-T-B)*(1-v/top);
   let g="";
-  for(let v=0;v<=top;v+=step)g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#26262C"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${v>=1000?(v/1000).toLocaleString("pt-BR")+"k":v}</text>`;
+  for(let v=0;v<=top;v+=step)g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#0B2B57"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${v>=1000?(v/1000).toLocaleString("pt-BR")+"k":v}</text>`;
   const withData=data.filter(x=>x.t>0),avg=withData.length?withData.reduce((s,x)=>s+x.t,0)/withData.length:0;
   data.forEach((x,i)=>{const cx=L+cw*i+cw/2,x0=cx-bw/2,sel=x.m===month,op=sel?1:.55;
     g+=`<g data-month="${x.m}" style="cursor:pointer"><rect x="${L+cw*i}" y="${T}" width="${cw}" height="${H-T}" fill="transparent"/>`;
